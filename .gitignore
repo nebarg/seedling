@@ -1,8 +1,9 @@
 /.phpunit.cache
+/app/Http
+/database/migrations
 /node_modules
-/public/build
-/public/hot
-/public/storage
+/public
+/resources
 /storage/*.key
 /vendor
 .env
