@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Prompts;
@@ -61,10 +61,17 @@ class SeedDatabaseCommand extends Command
     private function seed(string|array $seeders): void
     {
         foreach ((array) $seeders as $seeder) {
-            $filename = str_replace(' ', '', $seeder);
+            $namespace = sprintf(
+                '\\Database\\Seeders\\%s',
+                str_replace(' ', '', $seeder)
+            );
 
             try {
-                Artisan::call('db:seed', ['--class' => $filename]);
+                $seederToRun = $this->laravel->make($namespace)
+                    ->setContainer($this->laravel)
+                    ->setCommand($this);
+
+                Model::unguarded(static fn() => $seederToRun->__invoke());
 
                 $this->info('Successfully sown ' . $seeder);
             } catch (Exception) {
