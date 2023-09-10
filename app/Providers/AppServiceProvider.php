@@ -12,7 +12,6 @@ use RuntimeException;
 class AppServiceProvider extends ServiceProvider
 {
     private array $enabledCommands = [
-        'app:seed',
         'db:seed',
         'make:factory',
         'make:model',

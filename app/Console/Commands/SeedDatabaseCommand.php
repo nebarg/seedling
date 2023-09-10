@@ -11,7 +11,7 @@ use Laravel\Prompts;
 
 class SeedDatabaseCommand extends Command
 {
-    protected $signature = 'app:seed';
+    protected $signature = 'db:seed';
 
     protected $description = 'Populate your database with fake data.'
         . ' This application does not handle migrations.';
