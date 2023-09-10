@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
 
             if (!in_array($command, $this->enabledCommands, true)) {
                 throw new InvalidConsoleCommandException(
-                    'Standard console commands are disabled. Use `app:seed` to seed data'
+                    'Standard console commands are disabled. Use `db:seed` to seed data'
                 );
             }
         });
