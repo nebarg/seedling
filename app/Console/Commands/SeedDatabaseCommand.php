@@ -20,17 +20,9 @@ class SeedDatabaseCommand extends Command
     {
         $availableSeeders = $this->findSeeders();
 
-        $seedsToSow = $this->promptUser($availableSeeders);
+        $promptChoice = $this->promptUser($availableSeeders);
 
-        if ($seedsToSow === 'Cancel') {
-            $this->info('No seeds have been sown.');
-
-            return;
-        }
-
-        if ($seedsToSow === 'All') {
-            $seedsToSow = $availableSeeders;
-        }
+        $seedsToSow = $this->filesFromPrompt($promptChoice, $availableSeeders);
 
         $this->seed($seedsToSow);
     }
@@ -58,9 +50,28 @@ class SeedDatabaseCommand extends Command
         );
     }
 
-    private function seed(string|array $seeders): void
+    private function filesFromPrompt(string $promptChoice, array $availableSeeders): array
     {
-        foreach ((array) $seeders as $seeder) {
+        if ($promptChoice === 'Cancel') {
+            return [];
+        }
+
+        if ($promptChoice === 'All') {
+            return $availableSeeders;
+        }
+
+        return [$promptChoice];
+    }
+
+    private function seed(array $seeders): void
+    {
+        if (empty($seeders)) {
+            $this->info('No seeds have been sown.');
+
+            return;
+        }
+
+        foreach ($seeders as $seeder) {
             $namespace = sprintf(
                 '\\Database\\Seeders\\%s',
                 str_replace(' ', '', $seeder)
