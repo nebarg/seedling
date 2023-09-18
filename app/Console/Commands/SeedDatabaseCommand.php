@@ -31,23 +31,29 @@ class SeedDatabaseCommand extends Command
     {
         $files = Storage::disk('database')->allFiles('seeders');
 
-        return array_map(static function ($seeder) {
-            return implode(
-                ' ',
-                Str::ucsplit(
-                    basename($seeder, '.php')
-                )
-            );
-        }, $files);
+        return array_map(static fn($seeder) => basename($seeder, '.php'), $files);
     }
 
     private function promptUser(array $files): string
     {
+        $options = $this->generatePromptOptions($files);
+
         return Prompts\select(
             label: 'What seeds would you like to sow today?',
-            options: ['All', ...$files, 'Cancel'],
+            options: $options,
             default: 'Cancel'
         );
+    }
+
+    private function generatePromptOptions(array $files): array
+    {
+        $fileList = ['All', ...$files, 'Cancel'];
+
+        return array_reduce($fileList, static function ($result, $file) {
+            $result[$file] = implode(' ', Str::ucsplit($file));
+
+            return $result;
+        }, []);
     }
 
     private function filesFromPrompt(string $promptChoice, array $availableSeeders): array
@@ -72,10 +78,7 @@ class SeedDatabaseCommand extends Command
         }
 
         foreach ($seeders as $seeder) {
-            $namespace = sprintf(
-                '\\Database\\Seeders\\%s',
-                str_replace(' ', '', $seeder)
-            );
+            $namespace = sprintf('\\Database\\Seeders\\%s', $seeder);
 
             try {
                 $seederToRun = $this->laravel->make($namespace)
