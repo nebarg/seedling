@@ -1,4 +1,4 @@
-# Seedling
+# Seedling 🌱
 
 A very simple database seeder to make populating your database with test data easier.
 

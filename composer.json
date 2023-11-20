@@ -5,7 +5,7 @@
     "keywords": ["seeder", "dev", "test data"],
     "license": "MIT",
     "require": {
-        "php": "^8.1",
+        "php": "^8.1|^8.2",
         "ext-pdo": "*",
         "laravel/framework": "^10.10",
         "laravel/tinker": "^2.8"
@@ -13,7 +13,7 @@
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
-        "mockery/mockery": "^1.4.4",
+        "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.0",
         "pestphp/pest": "^2.16",
         "phpunit/phpunit": "^10.1"
