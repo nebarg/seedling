@@ -14,7 +14,7 @@ class SeedDatabaseCommand extends Command
     protected $signature = 'db:seed';
 
     protected $description = 'Populate your database with fake data.'
-    .' This application does not handle migrations.';
+        .' This application does not handle migrations.';
 
     private PromptHandler $prompt;
 
@@ -54,9 +54,9 @@ class SeedDatabaseCommand extends Command
 
                 Model::unguarded(static fn() => $seederToRun->__invoke());
 
-                $this->info('Successfully sown ' . $seeder->friendlyName());
+                $this->info("Successfully sown {$seeder->friendlyName()}");
             } catch (Exception) {
-                $this->error(sprintf('Sowing %s failed', $seeder->friendlyName()));
+                $this->error("Sowing {$seeder->friendlyName()} failed");
             }
         });
     }
