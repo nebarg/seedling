@@ -2,95 +2,62 @@
 
 namespace App\Console\Commands;
 
+use App\Seedling\PromptHandler;
+use App\Seedling\SeedFileCollection;
 use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Laravel\Prompts;
 
 class SeedDatabaseCommand extends Command
 {
     protected $signature = 'db:seed';
 
     protected $description = 'Populate your database with fake data.'
-        . ' This application does not handle migrations.';
+    .' This application does not handle migrations.';
 
-    public function handle(): void
+    private PromptHandler $prompt;
+
+    private SeedFileCollection $seeders;
+
+    public function __construct(PromptHandler $prompt)
     {
-        $availableSeeders = $this->findSeeders();
+        parent::__construct();
 
-        $promptChoice = $this->promptUser($availableSeeders);
+        $this->prompt = $prompt;
 
-        $seedsToSow = $this->filesFromPrompt($promptChoice, $availableSeeders);
-
-        $this->seed($seedsToSow);
-    }
-
-    private function findSeeders(): array
-    {
-        $files = Storage::disk('database')->allFiles('seeders');
-
-        return array_map(static fn($seeder) => basename($seeder, '.php'), $files);
-    }
-
-    private function promptUser(array $files): string
-    {
-        $options = $this->generatePromptOptions($files);
-
-        return Prompts\select(
-            label: 'What seeds would you like to sow today?',
-            options: $options,
-            default: 'Cancel'
+        $this->seeders = SeedFileCollection::fromArray(
+            Storage::disk('database')->allFiles('seeders')
         );
     }
 
-    private function generatePromptOptions(array $files): array
+    public function handle(): void
     {
-        $fileList = ['All', ...$files, 'Cancel'];
+        $seeders = $this->prompt->promptUserForSeedChoice($this->seeders);
 
-        return array_reduce($fileList, static function ($result, $file) {
-            $result[$file] = implode(' ', Str::ucsplit($file));
-
-            return $result;
-        }, []);
-    }
-
-    private function filesFromPrompt(string $promptChoice, array $availableSeeders): array
-    {
-        if ($promptChoice === 'Cancel') {
-            return [];
-        }
-
-        if ($promptChoice === 'All') {
-            return $availableSeeders;
-        }
-
-        return [$promptChoice];
-    }
-
-    private function seed(array $seeders): void
-    {
-        if (empty($seeders)) {
+        if ($seeders->isEmpty()) {
             $this->info('No seeds have been sown.');
 
             return;
         }
 
-        foreach ($seeders as $seeder) {
-            $namespace = sprintf('\\Database\\Seeders\\%s', $seeder);
+        $this->seed($seeders);
+    }
 
+    private function seed(SeedFileCollection $seeders): void
+    {
+        $seeders->map(function ($seeder) {
             try {
-                $seederToRun = $this->laravel->make($namespace)
+                $seederToRun = $this->laravel->make($seeder->namespace())
                     ->setContainer($this->laravel)
                     ->setCommand($this);
 
                 Model::unguarded(static fn() => $seederToRun->__invoke());
 
-                $this->info('Successfully sown ' . $seeder);
+                $this->info('Successfully sown ' . $seeder->friendlyName());
             } catch (Exception) {
-                $this->error(sprintf('Sowing %s failed', $seeder));
+                $this->error(sprintf('Sowing %s failed', $seeder->friendlyName()));
             }
-        }
+        });
     }
 }
